@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayes A/B/N Test Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+
+    <style>
+        .readme {
+            flex-direction: column;
+            align-items: left;
+            justify-content: center;
+            margin-left: 10%;
+            width: 60%;
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+            padding: 5%;
+            font-family: "Roboto";
+        }
+
+
+        .slider-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-evenly;
+            width: 100%;
+        }
+
+        .slider {
+            display: flex;
+            flex-direction: column;
+            width: 20%;
+            font-family: "Roboto";
+        }
+
+
+        .plot-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+        }
+
+        .group-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .tablink {
+            background-color: #808080;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 8px 10px;
+            font-size: 12px;
+            width: 10%;
+            transition: transform 0.1s ease-in-out;
+        }
+
+        .tablink:hover {
+            background-color: #a3a3a3;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <button class="tablink" id="homebtn" onclick="openPage('dashboard', this)">Home</button>
+    <button class="tablink" id="readmebtn" onclick="openPage('readme', this)">Readme</button>
+    <hr>
+
+
+
+
+    <div id="dashboard">
+
+        <div class="slider-container">
+
+            <div class="slider">
+                <p>Version A</p>
+                <input type="range" min="0" max="500" id="n1Slider" step="1">
+                <label for="n1Slider">n: <span id="n1Value">500</span></label>
+
+                <input type="range" min="0" max="500" value="125" id="k1Slider" step="1">
+                <label for="k1Slider">k: <span id="k1Value">125</span></label>
+            </div>
+
+
+            <div class="slider">
+                <p>Version B</p>
+                <input type="range" min="0" max="500" id="n2Slider" step="1">
+                <label for="n2Slider">n: <span id="n2Value">50</span></label>
+
+                <input type="range" min="0" max="500" value="125" id="k2Slider" step="1">
+                <label for="k2Slider">k: <span id="k2Value">25</span></label>
+            </div>
+
+
+            <div class="slider">
+                <p>Version C</p>
+                <input type="range" min="0" max="500" id="n3Slider" step="1">
+                <label for="n3Slider">n: <span id="n3Value">50</span></label>
+
+                <input type="range" min="0" max="500" value="125" id="k3Slider" step="1">
+                <label for="k3Slider">k: <span id="k3Value">25</span></label>
+            </div>
+
+        </div>
+
+
+        <hr>
+
+        <div class="plot-container">
+
+            <div class="group-container">
+                <div id="interval-plot"></div>
+                <div id="championship-table"></div>
+            </div>
+
+            <div class="group-container">
+                <div id="integral-plot"></div>
+                <div id="championship-plot"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="readme" id="readme" style="display: none">
+        <h1>Setup</h1>
+        <p>
+            Let there be three independent Bernoulli trials, denoted "Version A", "Version B", and "Version C".
+            Let \(\theta_A, \theta_B, \theta_C\) be the unknown probabilities of success for the corresponding trials.
+        </p>
+
+        <p>
+            Let \(\theta_A, \theta_B, \theta_C\) each have a <a
+                href="https://www.math.wm.edu/~leemis/chart/UDR/PDFs/Standarduniform.pdf">standard uniform
+                distribution</a>.
+            This distribution represents zero prior information about the probabilities of success in each experiment:
+            any probability of success is equally likely.
+            Let this distribution be the prior probability distribution for each of the parameters \(\theta_A, \theta_B,
+            \theta_C\).
+        </p>
+
+        <p>
+            Let \(n_A, k_A, n_B, k_B, n_C, k_C\) be the number of attempts and the number of successes for each trial.
+        </p>
+
+        <p>
+            Fix some \(n_A, n_B, n_C\) and let
+
+            $$\Omega_A = \left\{(\theta_A, k_A) \mid \theta_A \in [0,1], k_A \in \{0,1,2 \ldots n_A\}\right\}$$
+            $$\Omega_B = \left\{(\theta_B, k_B) \mid \theta_B \in [0,1], k_B \in \{0,1,2 \ldots n_B\}\right\}$$
+            $$\Omega_C = \left\{(\theta_C, k_C) \mid \theta_C \in [0,1], k_C \in \{0,1,2 \ldots n_C\}\right\}$$
+
+            be the sample spaces representing our statistical model.
+            We can state the following about these sample spaces
+            (we can skip the indexes since the following is true for all sample spaces we defined):
+        </p>
+
+        <ul>
+            <li>
+                <p>
+                    The likelihood of observing a \(k\) successes given \(\theta\) can be expressed as follows:
+                    $$P(k|\theta)=\binom{n}{k}\theta^{k}(1-\theta)^{n-k}$$
+                </p>
+            </li>
+            <li>
+                <p>
+                    Let \(g(\theta)\) denote the prior marginal probability density function of the parameter theta.
+                    By applying Bayes theorem, we can obtain the posterior distribution of theta given an observation
+                    \(k\):
+
+                    $$f_k(\theta) = \frac{P(k|\theta)g(\theta)}{P(k)}$$
+                </p>
+            </li>
+            <li>
+                <p>
+                    The marginal probability of observing a result \(k\) over all possible values of \(\theta\)
+                    can be obtained via the Law of Total Probability:
+
+                    $$P(k)=\int_0^1 P(k|\theta)g(\theta)d\theta=\int_0^1 \binom{n}{k}\theta^{k}(1-\theta)^{n-k}
+                    g(\theta)d\theta$$
+                </p>
+            </li>
+
+            <li>
+                <p>
+                    Since the parameters have standard uniform priors, it follows that \(\forall \theta \in [0,1],
+                    g(\theta) = 1\)
+                </p>
+            </li>
+
+            <li>
+                <p>
+                    We can now rewrite the expression for the posterior distribution of theta as follows:
+
+                    $$
+                    f_k(\theta) = \frac{P(k|\theta)g(\theta)}{P(k)}
+                    = \frac{\binom{n}{k}\theta^{k}(1-\theta)^{n-k}g(\theta)}{\int_0^1
+                    \binom{n}{k}\theta^{k}(1-\theta)^{n-k} g(\theta)d\theta}
+                    = \frac{\theta^{k}(1-\theta)^{n-k}}{\int_0^1 \theta^{k}(1-\theta)^{n-k} d\theta}
+                    $$
+
+                    Observe that the expression we obtained for the posterior distribution of theta coincides
+                    with the Probability Density Function of the Beta distribution with parameters
+                    \(\alpha=k+1, \beta=n-k+1\).
+                    Thus, observing \(k\) successes after \(n\) attempts gives $$\theta \sim \text{Beta}(k+1, n-k+1)$$
+                </p>
+            </li>
+        </ul>
+
+        The obtained posterior distribution of theta is used as a basis for all the visualisations on the page.
+
+        <h1>Charts Description</h1>
+        <h2>99% Credible Intervals</h2>
+
+        <p>
+            For each version of the trial, the chart shows an interval \([a, b]\) such that \(\int_a^b
+            f_k(\theta)d\theta = 0.99 \)
+        </p>
+
+        <h2>Probability of Being Best</h2>
+
+        <p>
+            For each version of the trial, the chart shows the posterior probability of a certain version
+            having the biggest chances of success given the observed 
+            number of successes.
+        </p>
+
+        <p>
+            For example, for Version A, the probability of being best is expressed as
+            \(P_k(\theta_A > \theta_B \cap \theta_A > \theta_C)\). It is calculated as a triple integral
+            $$\int_0^1 \int_0^{\theta_A} \int_0^{\theta_A} f_{ABC}(\theta_A, \theta_B, \theta_C)d\theta_C d\theta_B d\theta_A$$
+            where \(f_{ABC}(\theta_A, \theta_B, \theta_C)=f_{k_A}(\theta_A)f_{k_B}(\theta_B)f_{k_C}(\theta_C)\)
+            is the joint posterior probability distribution of \(\theta_A, \theta_B, \theta_C\).
+        </p>
+
+        <h2>Tournament</h2>
+
+        <p>
+            A <a href="https://en.wikipedia.org/wiki/Round-robin_tournament">round-robin tournament</a> is
+            conducted among all the versions with the following rules:
+            <ul>
+                <li>
+                    <p>
+                        For all unordered pairs of versions \(\{\{i, j\} \mid i, j \in \{\text{"A", "B", "C"}\}, i \neq j\}\),
+                        we calculate the posterior probability of version \(i\) being better than version \(j\), expressed as
+                        \(P(\theta_i > \theta_j)=\int_0^1 \int_0^{\theta_i} f_{ij}(\theta_i, \theta_j) d\theta_j d\theta_i\),
+                        where \(f_{ij}(\theta_i, \theta_j)\) is the joint posterior probability density function of parameters
+                        \(\theta_i, \theta_j\).
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Version \(i\) receives \(P(\theta_i > \theta_j)\) points, 
+                        version \(j\) receives \(1-P(\theta_i > \theta_j)=P(\theta_j > \theta_i)\) points.
+                        This "antisymmetry" in points allocation allows comparing each pair of versions only once:
+                        comparing \(i\) to \(j\) gives the same result as comparing \(j\) to \(i\).
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        The points earned by each version are added up to form a total. It is useful to
+                        gauge the performance of a particular version by observing how many points it received
+                        out of the maximum (the maximum is equal to \(N-1\),
+                        where \(N\) is the total number of versions).
+                    </p>
+                </li>
+            </ul>
+            <p>The charts "Tournament" and "Tournament Totals" visualise the tournament process and totals.
+            For simplicity, we use the notation \(P(\text{A}>\text{B})\) to denote \(P(\theta_A > \theta_B)\) in
+            the tournament chart.</p>
+        </p>
+        
+        
+
+
+    </div>
+
+
+    <script type="text/javascript">
+
+        function openPage(pageName, btn) {
+            dashboard = document.getElementById("dashboard")
+            readme = document.getElementById("readme")
+            if (pageName === "dashboard") {
+                readme.style.display = "none"
+                dashboard.style.display = "block"
+            }
+            else {
+                readme.style.display = "flex"
+                dashboard.style.display = "none"
+            }
+        }
+
+
+
+
+        function simpsonsRule(func, a, b, n) {
+            const h = (b - a) / n;
+            let integral = func(a) + func(b);
+
+            for (let i = 1; i < n; i += 2) {
+                integral += 4 * func(a + i * h);
+            }
+
+            for (let i = 2; i < n - 1; i += 2) {
+                integral += 2 * func(a + i * h);
+            }
+
+            integral *= h / 3;
+            return integral;
+        }
+
+        function updateGraph() {
+            ns1 = document.getElementById('n1Slider')
+            ks1 = document.getElementById('k1Slider')
+            ns2 = document.getElementById('n2Slider')
+            ks2 = document.getElementById('k2Slider')
+            ns3 = document.getElementById('n3Slider')
+            ks3 = document.getElementById('k3Slider')
+
+            const n1 = Number.parseInt(ns1.value)
+            let k1 = Number.parseInt(ks1.value)
+
+            const n2 = Number.parseInt(ns2.value)
+            let k2 = Number.parseInt(ks2.value)
+
+            const n3 = Number.parseInt(ns3.value)
+            let k3 = Number.parseInt(ks3.value)
+
+            if (k1 > n1) {
+                ks1.value = n1
+                k1 = n1
+            }
+
+            if (k2 > n2) {
+                ks2.value = n2
+                k2 = n2
+            }
+
+            if (k3 > n3) {
+                ks3.value = n3
+                k3 = n3
+            }
+
+            document.getElementById('n1Value').textContent = ns1.value
+            document.getElementById('k1Value').textContent = ks1.value
+
+            document.getElementById('n2Value').textContent = ns2.value
+            document.getElementById('k2Value').textContent = ks2.value
+
+            document.getElementById('n3Value').textContent = ns3.value
+            document.getElementById('k3Value').textContent = ks3.value
+
+            credibleALower = jStat.beta.inv(0.005, k1 + 1, n1 - k1 + 1)
+            credibleAUpper = jStat.beta.inv(0.995, k1 + 1, n1 - k1 + 1)
+
+            credibleBLower = jStat.beta.inv(0.005, k2 + 1, n2 - k2 + 1)
+            credibleBUpper = jStat.beta.inv(0.995, k2 + 1, n2 - k2 + 1)
+
+            credibleCLower = jStat.beta.inv(0.005, k3 + 1, n3 - k3 + 1)
+            credibleCUpper = jStat.beta.inv(0.995, k3 + 1, n3 - k3 + 1)
+
+            pAgB = simpsonsRule(t => jStat.beta.pdf(t, k1 + 1, n1 - k1 + 1) * jStat.beta.cdf(t, k2 + 1, n2 - k2 + 1), 0, 1, 1000)
+            pBgA = simpsonsRule(t => jStat.beta.pdf(t, k2 + 1, n2 - k2 + 1) * jStat.beta.cdf(t, k1 + 1, n1 - k1 + 1), 0, 1, 1000)
+            pBgC = simpsonsRule(t => jStat.beta.pdf(t, k2 + 1, n2 - k2 + 1) * jStat.beta.cdf(t, k3 + 1, n3 - k3 + 1), 0, 1, 1000)
+            pCgB = simpsonsRule(t => jStat.beta.pdf(t, k3 + 1, n3 - k3 + 1) * jStat.beta.cdf(t, k2 + 1, n2 - k2 + 1), 0, 1, 1000)
+            pAgC = simpsonsRule(t => jStat.beta.pdf(t, k1 + 1, n1 - k1 + 1) * jStat.beta.cdf(t, k3 + 1, n3 - k3 + 1), 0, 1, 1000)
+            pCgA = simpsonsRule(t => jStat.beta.pdf(t, k3 + 1, n3 - k3 + 1) * jStat.beta.cdf(t, k1 + 1, n1 - k1 + 1), 0, 1, 1000)
+
+            pAgBC = simpsonsRule(
+                t => jStat.beta.pdf(t, k1 + 1, n1 - k1 + 1) * jStat.beta.cdf(t, k2 + 1, n2 - k2 + 1) * jStat.beta.cdf(t, k3 + 1, n3 - k3 + 1),
+                0, 1, 1000
+            )
+
+            pBgAC = simpsonsRule(
+                t => jStat.beta.pdf(t, k2 + 1, n2 - k2 + 1) * jStat.beta.cdf(t, k1 + 1, n1 - k1 + 1) * jStat.beta.cdf(t, k3 + 1, n3 - k3 + 1),
+                0, 1, 1000
+            )
+
+            pCgAB = simpsonsRule(
+                t => jStat.beta.pdf(t, k3 + 1, n3 - k3 + 1) * jStat.beta.cdf(t, k1 + 1, n1 - k1 + 1) * jStat.beta.cdf(t, k2 + 1, n2 - k2 + 1),
+                0, 1, 1000
+            )
+
+            pointsA = pAgB + pAgC //- pBgA - pCgA
+            pointsB = pBgA + pBgC //- pAgB - pCgB
+            pointsC = pCgA + pCgB //- pAgC - pBgC
+
+
+            intervals = [
+                {
+                    version: "A",
+                    lower: credibleALower,
+                    upper: credibleAUpper
+                },
+                {
+                    version: "B",
+                    lower: credibleBLower,
+                    upper: credibleBUpper
+                },
+                {
+                    version: "C",
+                    lower: credibleCLower,
+                    upper: credibleCUpper
+                }
+            ]
+
+            integrals = [
+                {
+                    version: "A",
+                    points: pAgBC
+                },
+                {
+                    version: "B",
+                    points: pBgAC
+                },
+                {
+                    version: "C",
+                    points: pCgAB
+                }
+            ]
+
+            championship = [
+                {
+                    version: "A",
+                    points: pointsA
+                },
+                {
+                    version: "B",
+                    points: pointsB
+                },
+                {
+                    version: "C",
+                    points: pointsC
+                }
+            ],
+
+                championship_table = [
+                    {
+                        versionFirst: "A",
+                        versionSecond: "B",
+                        pFirstGreater: pAgB,
+                    },
+                    {
+                        versionFirst: "B",
+                        versionSecond: "A",
+                        pFirstGreater: pBgA
+                    },
+                    {
+                        versionFirst: "A",
+                        versionSecond: "C",
+                        pFirstGreater: pAgC
+                    },
+                    {
+                        versionFirst: "C",
+                        versionSecond: "A",
+                        pFirstGreater: pCgA
+                    },
+                    {
+                        versionFirst: "B",
+                        versionSecond: "C",
+                        pFirstGreater: pBgC
+                    },
+                    {
+                        versionFirst: "C",
+                        versionSecond: "B",
+                        pFirstGreater: pCgB
+                    }
+
+                ]
+
+            interval_plot = Plot.plot(
+                {
+                    title: "99% Credible Intervals",
+                    insetLeft: 40,
+                    insetRight: 40,
+                    height: 200,
+                    style: {
+                        fontSize: 12,
+                    },
+                    y: {
+                        type: "point",
+                        labelAnchor: "top",
+                        tickSize: 0
+                    },
+                    marks: [
+                        Plot.ruleY(intervals, {
+                            x1: "lower",
+                            x2: "upper",
+                            y: "version",
+                            stroke: "version",
+                            strokeWidth: 3
+                        }),
+                        Plot.text(intervals, {
+                            x: "lower",
+                            y: "version",
+                            text: d => d.lower.toFixed(4),
+                            dy: 15
+                        }),
+                        Plot.text(intervals, {
+                            x: "upper",
+                            y: "version",
+                            text: d => d.upper.toFixed(4),
+                            dy: -15
+                        }),
+                        Plot.dot(intervals, {
+                            x: "lower",
+                            y: "version",
+                            fill: "version",
+                            r: 5
+                        }),
+                        Plot.dot(intervals, {
+                            x: "upper",
+                            y: "version",
+                            fill: "version",
+                            r: 5
+                        }),
+                        Plot.gridY(),
+                        Plot.gridX()
+                    ]
+                }
+            )
+
+            championship_plot = Plot.plot(
+                {
+                    title: "Tournament Totals",
+                    height: 200,
+                    marginRight: 40,
+                    x: {
+                        domain: [0, 2]
+                    },
+                    marks: [
+                        Plot.barX(championship, { x: "points", y: "version", fill: "version", sort: { y: "y" } }),
+                        Plot.text(championship, { x: "points", y: "version", text: d => d.points.toFixed(4), dx: 20, dy: -8}),
+                        Plot.text(championship, { x: "points", y: "version", text: d => 2, dx: 20, dy: 8}),
+                        Plot.text(championship, { x: "points", y: "version", text: d => "\u2571", dx: 20, rotate: 40, fontSize: 12})
+                    ]
+                }
+            )
+
+            championship_table_plot = Plot.plot(
+                {
+                    title: "Tournament",
+                    height: 200,
+                    grid: true,
+                    style: {
+                        fontSize: 12
+                    },
+                    x: {
+                        type: "band",
+                        tickSize: 0,
+                        label: ""
+                    },
+                    y: {
+                        type: "band",
+                        tickSize: 0,
+                        label: ""
+                    },
+                    marks: [
+                        Plot.cell(championship_table, { x: "versionSecond", y: "versionFirst", fill: "versionFirst", fillOpacity: 0.7 }),
+                        Plot.text(championship_table, {
+                            x: "versionSecond",
+                            y: "versionFirst",
+                            textStroke: "white",
+                            text: d => `P(${d.versionFirst} > ${d.versionSecond}) = ${d.pFirstGreater.toFixed(4)}`
+                        })
+                    ]
+
+                }
+            )
+
+            integral_plot = Plot.plot(
+                {
+                    title: "Probability of Being Best",
+                    height: 200,
+                    marginRight: 40,
+                    x: {
+                        domain: [0, 1]
+                    },
+                    marks: [
+                        Plot.barX(integrals, { x: "points", y: "version", fill: "version", sort: { y: "y" } }),
+                        Plot.text(integrals, { x: "points", y: "version", text: d => d.points.toFixed(4), dx: 20})
+                    ]
+                }
+            )
+
+            document.getElementById("interval-plot").replaceChildren(interval_plot)
+            document.getElementById("championship-plot").replaceChildren(championship_plot)
+            document.getElementById("championship-table").replaceChildren(championship_table_plot)
+            document.getElementById("integral-plot").replaceChildren(integral_plot)
+        }
+
+        document.getElementById('n1Slider').addEventListener('input', updateGraph);
+        document.getElementById('k1Slider').addEventListener('input', updateGraph);
+        document.getElementById('n2Slider').addEventListener('input', updateGraph);
+        document.getElementById('k2Slider').addEventListener('input', updateGraph);
+        document.getElementById('n3Slider').addEventListener('input', updateGraph);
+        document.getElementById('k3Slider').addEventListener('input', updateGraph);
+
+
+
+        document.getElementById('homebtn').addEventListener('mousedown', function () {
+            this.style.transform = 'scale(0.9)';
+        });
+
+        document.getElementById('homebtn').addEventListener('mouseup', function () {
+            this.style.transform = 'scale(1)';
+        });
+
+        // Reset the button when the mouse leaves the button area
+        document.getElementById('homebtn').addEventListener('mouseleave', function () {
+            this.style.transform = 'scale(1)';
+        });
+
+        document.getElementById('readmebtn').addEventListener('mousedown', function () {
+            this.style.transform = 'scale(0.9)';
+        });
+
+        document.getElementById('readmebtn').addEventListener('mouseup', function () {
+            this.style.transform = 'scale(1)';
+        });
+
+        // Reset the button when the mouse leaves the button area
+        document.getElementById('readmebtn').addEventListener('mouseleave', function () {
+            this.style.transform = 'scale(1)';
+        });
+
+        updateGraph();  // initial rendering
+
+    </script>
+</body>
+
+</html>
