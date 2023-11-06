@@ -138,7 +138,84 @@
     </div>
 
     <div class="readme" id="readme" style="display: none">
-        <h1>Setup</h1>
+        <h1>Introduction</h1>
+        <p>
+            Welcome to the simple Bayesian A/B/N test calculator webpage!
+        </p>
+        <p>
+            This is a simple demo for demonstration purposes. It focuses on a specific
+            case of exactly 3 versions of a pass/fail trial, and the maximum values for the number of attempts
+            in each trial is limited to 500, which is small to be useful but enough to
+            illustrate the concepts.
+        </p>
+        <p>
+            The goal of this calculator is to aid the process of deciding a winner among
+            3 versions of a pass/fail trial with the success rate being the deciding metric.
+            The decision making process is based on attempting each version of the trial
+            a certain (not necessarily the same) number of times, observing the number of successes in each version,
+            and using that data to gauge the success rate for each version.
+        </p>
+        <p>
+            The pass/fail test itself could be anything. For example, we could formalise
+            a visit to a landing page as a trial attempt, in this case a conversion would
+            count as a success, and the chance of success would correspond to the conversion rate.
+        </p>
+        <p>
+            The number of attempts, denoted as \(n\), and the number of successes, denoted as \(k\),
+            can be controlled via sliders for each version of the trial.
+        </p>
+        <h1>Charts Description</h1>
+        <h2>99% Credible Intervals</h2>
+        <p>
+            For each version of the trial, this chart shows an inverval such that
+            we can expect the chances of success
+            to be within this interval with 99% probability, given the observed data.
+        </p>
+        <p>
+            In the example of landing page conversions, it can be interpreted as follows:
+            <ul>
+                <li>
+                    Given the observed data, there is a 99% chance that the conversion rate of this version is 
+                    within the credible interval
+                </li>
+            </ul>    
+        </p>
+        <h1>Probability of Being Best</h1>
+        <p>
+            For each version of the trial, this chart shows the probability 
+            that the success rate of the given version is the biggest among all three versions, given the observed data.
+            In the conversions example, it can be interpreted as "the probability of the conversion rate being the biggest
+            among all three versions of a landing page".
+        </p>
+        <p>
+            If some version significantly (the significance level can be decided arbitrarily, for example, 95%)
+            outpaces the others, it can be declared winner.
+        </p>
+        <h1>Tournament</h1>
+        <p>
+            A <a href="https://en.wikipedia.org/wiki/Round-robin_tournament">round-robin tournament</a> is
+            conducted among all the versions with the following rules:
+            <ul>
+                <li>
+                    Each version is compared with each version once, and the probability
+                    that the success rate of one version is greater than that of a second version is calculated.
+                    Let's denote this probability as \(p\).
+                </li>
+                <li>
+                    The former version receives \(p\) points, the latter receives \(1-p\) points.
+                </li>
+                <li>
+                    The total number of earned points as added up to form a total. It is useful to
+                    gauge the performance of a particular version by observing how many points it received
+                    out of the maximum (the maximum is equal to \(N-1\),
+                    where \(N\) is the total number of versions).
+                </li>
+            </ul>
+        </p>
+        <p>
+            The charts "Tournament" and "Tournament Totals" visualise the tournament process and totals.
+        </p>
+        <h1>Statistical Setup</h1>
         <p>
             Let there be three independent Bernoulli trials, denoted "Version A", "Version B", and "Version C".
             Let \(\theta_A, \theta_B, \theta_C\) be the unknown probabilities of success for the corresponding trials.
@@ -224,7 +301,7 @@
 
         The obtained posterior distribution of theta is used as a basis for all the visualisations on the page.
 
-        <h1>Charts Description</h1>
+        <h1>Charts Calculations</h1>
         <h2>99% Credible Intervals</h2>
 
         <p>
