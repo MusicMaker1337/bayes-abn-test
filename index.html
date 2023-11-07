@@ -205,7 +205,7 @@
                     The former version receives \(p\) points, the latter receives \(1-p\) points.
                 </li>
                 <li>
-                    The total number of earned points as added up to form a total. It is useful to
+                    The total number of earned points is added up to form a total. It is useful to
                     gauge the performance of a particular version by observing how many points it received
                     out of the maximum (the maximum is equal to \(N-1\),
                     where \(N\) is the total number of versions).
@@ -214,6 +214,34 @@
         </p>
         <p>
             The charts "Tournament" and "Tournament Totals" visualise the tournament process and totals.
+        </p>
+        <h1>Limitations</h1>
+        <p>
+            The core assumption for all the calculations is statistical independence among versions of the trial
+            and attempts within each trial, meaning that the success rate of one version does not affect
+            the success rate of any other version, and within each version the outcome in one
+            attempt does not influence the probability of success in any other attempt.
+        </p>
+        <p>
+            For example, when performing an A/B/N test of landing pages:
+            <ul>
+                <li>
+                    Randomly Assign Pages: Make sure each visitor to your website has an equal chance of seeing any version of your page. 
+                    Think of it like flipping a coin — each flip doesn't affect the next one.
+                </li>
+                <li>
+                    Keep Conditions Consistent: Try to show your page variations under similar conditions.
+                    For example, don't show one version only on weekends and another only on weekdays.
+                </li>
+                <li>
+                    One Person, One Page: Ensure that each visitor sees only one version of your page during the test.
+                    If they see multiple versions, it might change how they react.
+                </li>
+                <li>
+                    Be Mindful of Outside Influences: Keep an eye on external events that could affect your results.
+                    If there's a big sale or a holiday, it might change how people act, which could skew your data.
+                </li>
+            </ul>
         </p>
         <h1>Statistical Setup</h1>
         <p>
